@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-concat": "^2.6.1",
+    "mime-types": "^2.1.27"
+  },
+  "scripts": {
+    "compile-cloudformation": "sh compile_cloudformation.sh",
+    "deploy-cloudformation": "aws --profile jsonize s3 cp --recursive ./dist s3://cloudformation.jsonize.com/cloudfront-edge-authenticator"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.702.0"
+  }
+}
