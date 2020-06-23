@@ -119,6 +119,8 @@ Resources:
                       request.method = 'method' in newRequest ? newRequest.method : request.method;
                       request.queryString = 'queryString' in newRequest ? newRequest.queryString : request.queryString;
                       request.uri = 'uri' in newRequest ? newRequest.uri : request.uri;
+                      if (!request.uri || request.uri[0] !== "/")
+                          request.uri = "/" + request.uri;
                       if (newRequest.headers) {
                           for (var key in newRequest.headers) {
                               request.headers[key.toLowerCase()] = [{
@@ -136,4 +138,4 @@ Resources:
       Handler: index.handler
       Role: !GetAtt EdgeLambdaRole.Arn
       Runtime: nodejs12.x
-      Timeout: 60
+      Timeout: 5

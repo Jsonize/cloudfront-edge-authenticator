@@ -41,4 +41,4 @@ Resources:
       Handler: index.handler
       Role: !GetAtt EdgeLambdaRole.Arn
       Runtime: nodejs12.x
-      Timeout: 60
+      Timeout: 5

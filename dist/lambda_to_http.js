@@ -76,6 +76,8 @@ exports.handler = (event, context, callback) => {
             request.method = 'method' in newRequest ? newRequest.method : request.method;
             request.queryString = 'queryString' in newRequest ? newRequest.queryString : request.queryString;
             request.uri = 'uri' in newRequest ? newRequest.uri : request.uri;
+            if (!request.uri || request.uri[0] !== "/")
+                request.uri = "/" + request.uri;
             if (newRequest.headers) {
                 for (var key in newRequest.headers) {
                     request.headers[key.toLowerCase()] = [{
