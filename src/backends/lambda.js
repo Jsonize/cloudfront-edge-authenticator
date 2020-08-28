@@ -51,7 +51,12 @@ const requestResponse = function (environment, request, callback) {
             }
         } else {
             console.log("Response", data.statusCode);
-            callback({status: data.statusCode}, null);
+            var headers = {};
+            if (data.headers)
+                for (var key in data.headers)
+                    if (key.toLowerCase() === 'www-authenticate')
+                        headers[key] = data.headers[key];
+            callback({status: data.statusCode, headers: headers}, null);
         }
     });
 };

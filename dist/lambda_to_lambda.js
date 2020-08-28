@@ -60,11 +60,28 @@ const requestResponse = function (environment, request, callback) {
             }
         } else {
             console.log("Response", data.statusCode);
-            callback({status: data.statusCode}, null);
+            var headers = {};
+            if (data.headers)
+                for (var key in data.headers)
+                    if (key.toLowerCase() === 'www-authenticate')
+                        headers[key] = data.headers[key];
+            callback({status: data.statusCode, headers: headers}, null);
         }
     });
 };
 const environment = JSON.parse(require('fs').readFileSync("environment.json"));
+
+function mapHeaders(from, to) {
+    from = from || {};
+    to = to || {};
+    for (var key in from) {
+        to[key.toLowerCase()] = [{
+            key: key,
+            value: from[key]
+        }];
+    }
+    return to;
+}
 
 exports.handler = (event, context, callback) => {
     const request = event.Records[0].cf.request;
@@ -89,16 +106,12 @@ exports.handler = (event, context, callback) => {
             request.uri = 'uri' in newRequest ? newRequest.uri : request.uri;
             if (!request.uri || request.uri[0] !== "/")
                 request.uri = "/" + request.uri;
-            if (newRequest.headers) {
-                for (var key in newRequest.headers) {
-                    request.headers[key.toLowerCase()] = [{
-                        key: key,
-                        value: newRequest.headers[key]
-                    }];
-                }
-            }
+            mapHeaders(newRequest.headers, request.headers);
             callback(null, request);
         } else
-            callback(null, { status: response.status });
+            callback(null, {
+                status: response.status,
+                headers: mapHeaders(response.headers)
+            });
     });
 };

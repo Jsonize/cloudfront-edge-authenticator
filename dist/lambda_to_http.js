@@ -43,7 +43,12 @@ const requestResponse = function (environment, request, callback) {
             });
         } else {
             console.log("Response", response.statusCode);
-            callback({status: response.statusCode}, null);
+            var headers = {};
+            if (response.headers)
+                for (var key in response.headers)
+                    if (key.toLowerCase() === 'www-authenticate')
+                        headers[key] = response.headers[key];
+            callback({status: response.statusCode, headers: headers}, null);
         }
     });
     req.on("error", function () {
@@ -54,6 +59,18 @@ const requestResponse = function (environment, request, callback) {
 };
 
 const environment = JSON.parse(require('fs').readFileSync("environment.json"));
+
+function mapHeaders(from, to) {
+    from = from || {};
+    to = to || {};
+    for (var key in from) {
+        to[key.toLowerCase()] = [{
+            key: key,
+            value: from[key]
+        }];
+    }
+    return to;
+}
 
 exports.handler = (event, context, callback) => {
     const request = event.Records[0].cf.request;
@@ -78,16 +95,12 @@ exports.handler = (event, context, callback) => {
             request.uri = 'uri' in newRequest ? newRequest.uri : request.uri;
             if (!request.uri || request.uri[0] !== "/")
                 request.uri = "/" + request.uri;
-            if (newRequest.headers) {
-                for (var key in newRequest.headers) {
-                    request.headers[key.toLowerCase()] = [{
-                        key: key,
-                        value: newRequest.headers[key]
-                    }];
-                }
-            }
+            mapHeaders(newRequest.headers, request.headers);
             callback(null, request);
         } else
-            callback(null, { status: response.status });
+            callback(null, {
+                status: response.status,
+                headers: mapHeaders(response.headers)
+            });
     });
 };

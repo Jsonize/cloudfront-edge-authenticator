@@ -100,6 +100,10 @@ require('http').createServer(function (request, response) {
             }
         } else {
             response.statusCode = retResponse.status;
+            if (retResponse.headers) {
+                for (var key in retResponse.headers)
+                    response.setHeader(key, retResponse.headers[key]);
+            }
             response.end();
         }
     });
