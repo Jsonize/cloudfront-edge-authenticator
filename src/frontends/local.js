@@ -46,6 +46,14 @@ require('http').createServer(function (request, response) {
         if (newRequest) {
             if ('uri' in newRequest)
                 uri = newRequest.uri;
+            /*
+            This would ONLY forward the headers to the ORIGIN. That's not what we want here.
+
+            if (newRequest.headers) {
+                for (var key in newRequest.headers)
+                    response.setHeader(key, newRequest.headers[key]);
+            }
+             */
             const fileName = environment.FILE_BASE.replace("%", uri);
             const FS = require('fs');
 
@@ -62,11 +70,6 @@ require('http').createServer(function (request, response) {
                 response.statusCode = 200;
                 response.end();
                 return;
-            }
-
-            if (newRequest.headers) {
-                for (var key in newRequest.headers)
-                    response.setHeader(key, newRequest.headers[key]);
             }
 
             const stat = FS.statSync(fileName);
