@@ -1,5 +1,5 @@
 const signUri = function (environment, uri) {
-    if (!environment.REQUEST_SIGNATURE)
+    if (!environment.REQUEST_SIGNATURE || environment.REQUEST_SIGNATURE.length === 0)
         return uri;
     const Crypto = require("crypto");
     uri = uri + "?nonce=" + Crypto.randomBytes(32).toString('hex') + "&timestamp=" + ((new Date()).getTime() + 5 * 60 * 1000);
@@ -69,7 +69,12 @@ const requestResponse = function (environment, request, callback) {
         }
     });
 };
-const environment = JSON.parse(require('fs').readFileSync("environment.json"));
+const environment = {
+    "REQUEST_URL": "${RequestUrl}",
+    "REQUEST_SIGNATURE": "${RequestSignature}",
+    "AWS_REGION": "${AwsRegion}",
+    "LAMBDA_FUNCTION_NAME": "${LambdaFunctionName}"
+};
 
 function mapHeaders(from, to) {
     from = from || {};

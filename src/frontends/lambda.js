@@ -1,4 +1,9 @@
-const environment = JSON.parse(require('fs').readFileSync("environment.json"));
+const environment = {
+    "REQUEST_URL": "${RequestUrl}",
+    "REQUEST_SIGNATURE": "${RequestSignature}",
+    "AWS_REGION": "${AwsRegion}",
+    "LAMBDA_FUNCTION_NAME": "${LambdaFunctionName}"
+};
 
 function mapHeaders(from, to) {
     from = from || {};

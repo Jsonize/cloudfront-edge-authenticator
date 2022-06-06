@@ -5,6 +5,28 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: Resources for setting up the lambda part for the edge authenticator.
 
 
+
+Parameters:
+
+  RequestUrl:
+    Type: String
+    Description: The request url rewrite for the origin Lambda function
+    Default: "%uri%"
+
+  RequestSignature:
+    Type: String
+    Description: Optional request signature for signing
+
+  AwsRegion:
+    Type: String
+    Description: AWS region of the origin Lambda function
+    Default: us-east-1
+
+  LambdaFunctionName:
+    Type: String
+    Description: Name of the origin Lambda function
+
+
 Resources:
 
   EdgeLambdaRole:
@@ -29,9 +51,9 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        ZipFile: |
+        ZipFile: !Sub |
           const signUri = function (environment, uri) {
-              if (!environment.REQUEST_SIGNATURE)
+              if (!environment.REQUEST_SIGNATURE || environment.REQUEST_SIGNATURE.length === 0)
                   return uri;
               const Crypto = require("crypto");
               uri = uri + "?nonce=" + Crypto.randomBytes(32).toString('hex') + "&timestamp=" + ((new Date()).getTime() + 5 * 60 * 1000);
@@ -92,11 +114,33 @@ Resources:
                       }
                   } else {
                       console.log("Response", data.statusCode);
-                      callback({status: data.statusCode}, null);
+                      var headers = {};
+                      if (data.headers)
+                          for (var key in data.headers)
+                              if (key.toLowerCase() === 'www-authenticate')
+                                  headers[key] = data.headers[key];
+                      callback({status: data.statusCode, headers: headers}, null);
                   }
               });
           };
-          const environment = JSON.parse(require('fs').readFileSync("environment.json"));
+          const environment = {
+              "REQUEST_URL": "${RequestUrl}",
+              "REQUEST_SIGNATURE": "${RequestSignature}",
+              "AWS_REGION": "${AwsRegion}",
+              "LAMBDA_FUNCTION_NAME": "${LambdaFunctionName}"
+          };
+          
+          function mapHeaders(from, to) {
+              from = from || {};
+              to = to || {};
+              for (var key in from) {
+                  to[key.toLowerCase()] = [{
+                      key: key,
+                      value: from[key]
+                  }];
+              }
+              return to;
+          }
           
           exports.handler = (event, context, callback) => {
               const request = event.Records[0].cf.request;
@@ -121,17 +165,13 @@ Resources:
                       request.uri = 'uri' in newRequest ? newRequest.uri : request.uri;
                       if (!request.uri || request.uri[0] !== "/")
                           request.uri = "/" + request.uri;
-                      if (newRequest.headers) {
-                          for (var key in newRequest.headers) {
-                              request.headers[key.toLowerCase()] = [{
-                                  key: key,
-                                  value: newRequest.headers[key]
-                              }];
-                          }
-                      }
+                      mapHeaders(newRequest.headers, request.headers);
                       callback(null, request);
                   } else
-                      callback(null, { status: response.status });
+                      callback(null, {
+                          status: response.status,
+                          headers: mapHeaders(response.headers)
+                      });
               });
           };
           
@@ -139,3 +179,10 @@ Resources:
       Role: !GetAtt EdgeLambdaRole.Arn
       Runtime: nodejs12.x
       Timeout: 5
+
+
+Outputs:
+
+  EdgeLambdaArn:
+    Description: The arn of the Edge lambda
+    Value: !GetAtt EdgeLambda.Arn
