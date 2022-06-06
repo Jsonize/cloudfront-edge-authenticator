@@ -180,6 +180,13 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 5
 
+  EdgeLambdaVersion:
+    Type: AWS::Lambda::Version
+    DependsOn:
+      - EdgeLambda
+    Properties:
+      FunctionName: !GetAtt EdgeLambda.Arn
+
 
 Outputs:
 
