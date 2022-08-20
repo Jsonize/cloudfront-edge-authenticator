@@ -59,7 +59,7 @@ Resources:
           {{file-read file:lambda_to_http.js indent:true}}
       Handler: index.handler
       Role: !GetAtt EdgeLambdaRole.Arn
-      Runtime: nodejs12.x
+      Runtime: nodejs16.x
       Timeout: 5
 
   EdgeLambdaVersion:
