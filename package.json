@@ -9,6 +9,6 @@
     "deploy-cloudformation": "aws --profile jsonize s3 cp --recursive ./dist s3://cloudformation.jsonize.com/cloudfront-edge-authenticator"
   },
   "dependencies": {
-    "aws-sdk": "^2.814.0"
+    "aws-sdk": "^2.1354.0"
   }
 }
